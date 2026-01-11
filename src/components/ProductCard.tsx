@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product, formatPrice } from '@/lib/products';
 import { useCart } from '@/contexts/CartContext';
+import brownieImage from '@/assets/brownie.jpg';
 
 interface ProductCardProps {
   product: Product;
@@ -33,9 +34,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
       className="bg-card rounded-xl p-4 shadow-card border border-border"
     >
       <div className="flex items-start gap-4">
-        {/* Icon */}
-        <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center text-3xl flex-shrink-0">
-          {product.icon}
+        {/* Brownie Image */}
+        <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+          <img
+            src={brownieImage}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Content */}

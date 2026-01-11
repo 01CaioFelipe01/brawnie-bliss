@@ -134,4 +134,8 @@
   .shadow-card {
     box-shadow: 0 2px 12px -2px hsl(var(--chocolate) / 0.1);
   }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
 }

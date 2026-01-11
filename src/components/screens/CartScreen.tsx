@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
-import BottomBar from '@/components/BottomBar';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
 import { getProductById } from '@/lib/cart';
+import brownieImage from '@/assets/brownie.jpg';
 
 interface CartScreenProps {
   onBack: () => void;
@@ -11,7 +11,7 @@ interface CartScreenProps {
 }
 
 const CartScreen = ({ onBack, onNext }: CartScreenProps) => {
-  const { cart, checkout, updateCheckout, updateQuantity, updateObservation, total, itemCount } = useCart();
+  const { cart, checkout, updateCheckout, updateQuantity, total, itemCount } = useCart();
 
   const cartItems = cart.filter(item => item.quantity > 0);
 
@@ -44,7 +44,7 @@ const CartScreen = ({ onBack, onNext }: CartScreenProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-36">
+    <div className="min-h-screen bg-background pb-safe">
       <Header 
         title="Carrinho" 
         subtitle={`${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`}
@@ -52,7 +52,7 @@ const CartScreen = ({ onBack, onNext }: CartScreenProps) => {
         onBack={onBack} 
       />
       
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-8">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -73,8 +73,12 @@ const CartScreen = ({ onBack, onNext }: CartScreenProps) => {
                   className="bg-card rounded-xl p-4 shadow-card border border-border"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center text-2xl flex-shrink-0">
-                      {product.icon}
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={brownieImage}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -142,15 +146,30 @@ const CartScreen = ({ onBack, onNext }: CartScreenProps) => {
               className="w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-gold/50 placeholder:text-muted-foreground text-foreground resize-none"
             />
           </motion.div>
+
+          {/* Total Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-card rounded-xl p-4 border border-border"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-muted-foreground">Total do pedido</span>
+              <span className="font-display font-bold text-xl text-foreground">
+                {formatPrice(total)}
+              </span>
+            </div>
+            
+            <button
+              onClick={onNext}
+              className="w-full py-4 px-6 rounded-lg bg-gradient-chocolate text-primary-foreground font-display font-semibold text-lg shadow-premium hover:opacity-90 transition-opacity active:scale-[0.98]"
+            >
+              Continuar
+            </button>
+          </motion.div>
         </motion.div>
       </main>
-      
-      <BottomBar
-        total={total}
-        itemCount={itemCount}
-        buttonText="Continuar"
-        onClick={onNext}
-      />
     </div>
   );
 };

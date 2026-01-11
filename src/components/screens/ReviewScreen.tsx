@@ -5,10 +5,14 @@ import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
 import { getProductById } from '@/lib/cart';
 import { openWhatsApp } from '@/lib/cart';
+import { toast } from 'sonner';
+import brownieImage from '@/assets/brownie.jpg';
 
 interface ReviewScreenProps {
   onBack: () => void;
 }
+
+const PIX_KEY = '(79) 98823-8865';
 
 const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
   const { cart, checkout, total } = useCart();
@@ -24,10 +28,13 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
     }, 1500);
   };
 
-  const paymentLabels = { pix: 'Pix', cash: 'Dinheiro', card: 'Cartão' };
+  const copyPixKey = () => {
+    navigator.clipboard.writeText('79988238865');
+    toast.success('Chave Pix copiada!');
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-6">
+    <div className="min-h-screen bg-background pb-safe">
       <Header 
         title="Revisar pedido" 
         subtitle="" 
@@ -35,11 +42,27 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
         onBack={onBack} 
       />
       
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-8 space-y-6">
+        {/* Customer Name */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-xl p-4 border border-border shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">👤</span>
+            <div>
+              <p className="text-sm text-muted-foreground">Cliente</p>
+              <p className="font-semibold text-foreground">{checkout.name}</p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Items */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="bg-card rounded-xl p-4 border border-border shadow-card"
         >
           <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -51,24 +74,32 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
               if (!product) return null;
 
               return (
-                <div key={item.productId} className="flex justify-between items-start">
+                <div key={item.productId} className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={brownieImage}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{product.icon}</span>
-                      <span className="font-medium text-foreground">{product.name}</span>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-medium text-foreground">{product.name}</span>
+                        <p className="text-sm text-muted-foreground">
+                          {item.quantity} {item.quantity === 1 ? 'unidade' : 'unidades'}
+                        </p>
+                      </div>
+                      <span className="font-medium text-foreground">
+                        {formatPrice(product.price * item.quantity)}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground ml-7">
-                      {item.quantity} {item.quantity === 1 ? 'unidade' : 'unidades'}
-                    </p>
                     {item.observation && (
-                      <p className="text-sm text-gold ml-7 mt-1">
+                      <p className="text-sm text-gold mt-1">
                         📝 {item.observation}
                       </p>
                     )}
                   </div>
-                  <span className="font-medium text-foreground">
-                    {formatPrice(product.price * item.quantity)}
-                  </span>
                 </div>
               );
             })}
@@ -80,7 +111,7 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.15 }}
             className="bg-card rounded-xl p-4 border border-border shadow-card"
           >
             <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -132,7 +163,7 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
           </div>
         </motion.div>
 
-        {/* Payment Info */}
+        {/* Payment Info - PIX */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -142,19 +173,23 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
           <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
             💳 Pagamento
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Forma</span>
-              <span className="font-medium text-foreground">
-                {paymentLabels[checkout.paymentMethod as keyof typeof paymentLabels]}
-              </span>
+              <span className="font-medium text-foreground">Pix</span>
             </div>
-            {checkout.paymentMethod === 'cash' && checkout.changeFor && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Troco para</span>
-                <span className="font-medium text-foreground">{checkout.changeFor}</span>
+            <div className="bg-secondary rounded-lg p-3">
+              <p className="text-xs text-muted-foreground mb-1">Chave Pix (celular)</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono font-semibold text-foreground">{PIX_KEY}</p>
+                <button
+                  onClick={copyPixKey}
+                  className="px-3 py-1.5 bg-gold/20 text-gold text-sm font-medium rounded-md hover:bg-gold/30 transition-colors"
+                >
+                  Copiar
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </motion.div>
 
@@ -173,24 +208,11 @@ const ReviewScreen = ({ onBack }: ReviewScreenProps) => {
           </div>
         </motion.div>
 
-        {/* Customer Name */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-card rounded-xl p-4 border border-border shadow-card"
-        >
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Cliente</span>
-            <span className="font-medium text-foreground">{checkout.name}</span>
-          </div>
-        </motion.div>
-
         {/* Finalize Button */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.5 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleFinalize}
           disabled={isOpening}

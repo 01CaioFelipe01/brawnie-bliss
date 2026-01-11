@@ -14,9 +14,9 @@ const BottomBar = ({ total, itemCount, buttonText, onClick, disabled = false }: 
     <motion.div 
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-premium"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-premium pb-safe"
     >
-      <div className="max-w-lg mx-auto px-4 py-4">
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-sm text-muted-foreground">
