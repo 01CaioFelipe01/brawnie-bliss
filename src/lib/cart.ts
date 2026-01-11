@@ -12,8 +12,7 @@ export interface CheckoutData {
   neighborhood?: string;
   address?: string;
   reference?: string;
-  paymentMethod: 'pix' | 'cash' | 'card' | '';
-  changeFor?: string;
+  paymentMethod: 'pix' | '';
   generalObservation?: string;
 }
 
@@ -53,7 +52,6 @@ export const getEmptyCheckout = (): CheckoutData => ({
   address: '',
   reference: '',
   paymentMethod: '',
-  changeFor: '',
   generalObservation: '',
 });
 
@@ -95,6 +93,7 @@ export const generateWhatsAppMessage = (cart: CartItem[], checkout: CheckoutData
   const total = getCartTotal(cart);
   
   let message = `Olá! Quero fazer um pedido no Brawnie do Rafa 🍫\n\n`;
+  message += `👤 *Nome:* ${checkout.name}\n\n`;
   message += `🧾 *Pedido:*\n${itemsText}\n\n`;
   
   if (checkout.generalObservation) {
@@ -108,18 +107,15 @@ export const generateWhatsAppMessage = (cart: CartItem[], checkout: CheckoutData
     if (checkout.reference) {
       addressParts.push(`Ref: ${checkout.reference}`);
     }
-    message += `📍 *Endereço:* ${addressParts.join(', ')}\n`;
+    message += `📍 *Endereço:* ${addressParts.join(', ')}\n\n`;
+  } else {
+    message += '\n';
   }
   
-  const paymentLabels = { pix: 'Pix', cash: 'Dinheiro', card: 'Cartão' };
-  message += `💳 *Pagamento:* ${paymentLabels[checkout.paymentMethod as keyof typeof paymentLabels] || checkout.paymentMethod}`;
-  
-  if (checkout.paymentMethod === 'cash' && checkout.changeFor) {
-    message += ` (Troco para ${checkout.changeFor})`;
-  }
-  
-  message += `\n💰 *Total:* ${formatPrice(total)}\n\n`;
-  message += `Obrigado!`;
+  message += `💳 *Pagamento:* Pix\n`;
+  message += `🔑 *Chave Pix (celular):* (79) 98823-8865\n`;
+  message += `✅ *Vou enviar o comprovante aqui assim que pagar.*\n\n`;
+  message += `💰 *Total:* ${formatPrice(total)}`;
   
   return message;
 };

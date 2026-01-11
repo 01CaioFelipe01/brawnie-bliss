@@ -14,7 +14,7 @@ const MenuScreen = ({ onNext }: MenuScreenProps) => {
   const { total, itemCount } = useCart();
 
   return (
-    <div className="min-h-screen bg-background pb-36">
+    <div className="min-h-screen bg-background pb-40">
       <Header />
       
       <main className="max-w-lg mx-auto px-4 py-6">

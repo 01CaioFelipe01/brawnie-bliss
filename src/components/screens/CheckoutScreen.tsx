@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice } from '@/lib/products';
+import { toast } from 'sonner';
 
 interface CheckoutScreenProps {
   onBack: () => void;
   onNext: () => void;
 }
+
+const PIX_KEY = '(79) 98823-8865';
 
 const CheckoutScreen = ({ onBack, onNext }: CheckoutScreenProps) => {
   const { checkout, updateCheckout, total } = useCart();
@@ -33,55 +36,25 @@ const CheckoutScreen = ({ onBack, onNext }: CheckoutScreenProps) => {
       }
     }
 
-    if (!checkout.paymentMethod) {
-      newErrors.paymentMethod = 'Selecione a forma de pagamento';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleContinue = () => {
     if (validate()) {
+      // Automatically set payment to Pix
+      updateCheckout({ paymentMethod: 'pix' });
       onNext();
     }
   };
 
-  const RadioOption = ({ 
-    name, 
-    value, 
-    label, 
-    checked, 
-    onChange 
-  }: { 
-    name: string; 
-    value: string; 
-    label: string; 
-    checked: boolean; 
-    onChange: () => void;
-  }) => (
-    <label className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-      checked 
-        ? 'border-gold bg-gold/10' 
-        : 'border-border bg-card hover:border-gold/50'
-    }`}>
-      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-        checked ? 'border-gold' : 'border-muted-foreground'
-      }`}>
-        {checked && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-3 h-3 rounded-full bg-gold"
-          />
-        )}
-      </div>
-      <span className="font-medium text-foreground">{label}</span>
-    </label>
-  );
+  const copyPixKey = () => {
+    navigator.clipboard.writeText('79988238865');
+    toast.success('Chave Pix copiada!');
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-6">
+    <div className="min-h-screen bg-background pb-safe">
       <Header 
         title="Dados do pedido" 
         subtitle="" 
@@ -89,7 +62,7 @@ const CheckoutScreen = ({ onBack, onNext }: CheckoutScreenProps) => {
         onBack={onBack} 
       />
       
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-lg mx-auto px-4 py-6 pb-8 space-y-6">
         {/* Name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -122,20 +95,51 @@ const CheckoutScreen = ({ onBack, onNext }: CheckoutScreenProps) => {
             Forma de entrega *
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <RadioOption
-              name="delivery"
-              value="pickup"
-              label="🏪 Retirada"
-              checked={checkout.deliveryMethod === 'pickup'}
-              onChange={() => updateCheckout({ deliveryMethod: 'pickup' })}
-            />
-            <RadioOption
-              name="delivery"
-              value="delivery"
-              label="🚚 Entrega"
-              checked={checkout.deliveryMethod === 'delivery'}
-              onChange={() => updateCheckout({ deliveryMethod: 'delivery' })}
-            />
+            <button
+              type="button"
+              onClick={() => updateCheckout({ deliveryMethod: 'pickup' })}
+              className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                checkout.deliveryMethod === 'pickup' 
+                  ? 'border-gold bg-gold/10' 
+                  : 'border-border bg-card hover:border-gold/50'
+              }`}
+            >
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                checkout.deliveryMethod === 'pickup' ? 'border-gold' : 'border-muted-foreground'
+              }`}>
+                {checkout.deliveryMethod === 'pickup' && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-3 h-3 rounded-full bg-gold"
+                  />
+                )}
+              </div>
+              <span className="font-medium text-foreground">🏪 Retirada</span>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => updateCheckout({ deliveryMethod: 'delivery' })}
+              className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                checkout.deliveryMethod === 'delivery' 
+                  ? 'border-gold bg-gold/10' 
+                  : 'border-border bg-card hover:border-gold/50'
+              }`}
+            >
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                checkout.deliveryMethod === 'delivery' ? 'border-gold' : 'border-muted-foreground'
+              }`}>
+                {checkout.deliveryMethod === 'delivery' && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-3 h-3 rounded-full bg-gold"
+                  />
+                )}
+              </div>
+              <span className="font-medium text-foreground">🚚 Entrega</span>
+            </button>
           </div>
           {errors.deliveryMethod && (
             <p className="text-destructive text-sm mt-1">{errors.deliveryMethod}</p>
@@ -143,118 +147,100 @@ const CheckoutScreen = ({ onBack, onNext }: CheckoutScreenProps) => {
         </motion.div>
 
         {/* Address Fields (only if delivery) */}
-        {checkout.deliveryMethod === 'delivery' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="space-y-4"
-          >
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Bairro *
-              </label>
-              <input
-                type="text"
-                value={checkout.neighborhood || ''}
-                onChange={(e) => updateCheckout({ neighborhood: e.target.value })}
-                placeholder="Digite o bairro"
-                className={`w-full px-4 py-3 rounded-lg bg-card border ${
-                  errors.neighborhood ? 'border-destructive' : 'border-border'
-                } focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground`}
-              />
-              {errors.neighborhood && (
-                <p className="text-destructive text-sm mt-1">{errors.neighborhood}</p>
-              )}
-            </div>
+        <AnimatePresence>
+          {checkout.deliveryMethod === 'delivery' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-4 overflow-hidden"
+            >
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Bairro *
+                </label>
+                <input
+                  type="text"
+                  value={checkout.neighborhood || ''}
+                  onChange={(e) => updateCheckout({ neighborhood: e.target.value })}
+                  placeholder="Digite o bairro"
+                  className={`w-full px-4 py-3 rounded-lg bg-card border ${
+                    errors.neighborhood ? 'border-destructive' : 'border-border'
+                  } focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground`}
+                />
+                {errors.neighborhood && (
+                  <p className="text-destructive text-sm mt-1">{errors.neighborhood}</p>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Rua e número *
-              </label>
-              <input
-                type="text"
-                value={checkout.address || ''}
-                onChange={(e) => updateCheckout({ address: e.target.value })}
-                placeholder="Ex: Rua das Flores, 123"
-                className={`w-full px-4 py-3 rounded-lg bg-card border ${
-                  errors.address ? 'border-destructive' : 'border-border'
-                } focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground`}
-              />
-              {errors.address && (
-                <p className="text-destructive text-sm mt-1">{errors.address}</p>
-              )}
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Rua e número *
+                </label>
+                <input
+                  type="text"
+                  value={checkout.address || ''}
+                  onChange={(e) => updateCheckout({ address: e.target.value })}
+                  placeholder="Ex: Rua das Flores, 123"
+                  className={`w-full px-4 py-3 rounded-lg bg-card border ${
+                    errors.address ? 'border-destructive' : 'border-border'
+                  } focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground`}
+                />
+                {errors.address && (
+                  <p className="text-destructive text-sm mt-1">{errors.address}</p>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Referência (opcional)
-              </label>
-              <input
-                type="text"
-                value={checkout.reference || ''}
-                onChange={(e) => updateCheckout({ reference: e.target.value })}
-                placeholder="Ex: Próximo à padaria"
-                className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </motion.div>
-        )}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Referência (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={checkout.reference || ''}
+                  onChange={(e) => updateCheckout({ reference: e.target.value })}
+                  placeholder="Ex: Próximo à padaria"
+                  className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Payment Method */}
+        {/* Payment Method - PIX only */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
           <label className="block text-sm font-medium text-foreground mb-3">
-            Forma de pagamento *
+            Forma de pagamento
           </label>
-          <div className="grid grid-cols-3 gap-3">
-            <RadioOption
-              name="payment"
-              value="pix"
-              label="💳 Pix"
-              checked={checkout.paymentMethod === 'pix'}
-              onChange={() => updateCheckout({ paymentMethod: 'pix' })}
-            />
-            <RadioOption
-              name="payment"
-              value="cash"
-              label="💵 Dinheiro"
-              checked={checkout.paymentMethod === 'cash'}
-              onChange={() => updateCheckout({ paymentMethod: 'cash' })}
-            />
-            <RadioOption
-              name="payment"
-              value="card"
-              label="💳 Cartão"
-              checked={checkout.paymentMethod === 'card'}
-              onChange={() => updateCheckout({ paymentMethod: 'card' })}
-            />
+          <div className="bg-card rounded-xl p-4 border-2 border-gold">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                <span className="text-xl">💳</span>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Pix (único)</p>
+                <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
+              </div>
+            </div>
+            
+            <div className="bg-secondary rounded-lg p-3">
+              <p className="text-xs text-muted-foreground mb-1">Chave Pix (celular)</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono font-semibold text-foreground">{PIX_KEY}</p>
+                <button
+                  onClick={copyPixKey}
+                  className="px-3 py-1.5 bg-gold/20 text-gold text-sm font-medium rounded-md hover:bg-gold/30 transition-colors"
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
           </div>
-          {errors.paymentMethod && (
-            <p className="text-destructive text-sm mt-1">{errors.paymentMethod}</p>
-          )}
         </motion.div>
-
-        {/* Change for (only if cash) */}
-        {checkout.paymentMethod === 'cash' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-          >
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Troco para quanto? (opcional)
-            </label>
-            <input
-              type="text"
-              value={checkout.changeFor || ''}
-              onChange={(e) => updateCheckout({ changeFor: e.target.value })}
-              placeholder="Ex: R$ 50,00"
-              className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-gold/50 text-foreground placeholder:text-muted-foreground"
-            />
-          </motion.div>
-        )}
 
         {/* Total Summary */}
         <motion.div
